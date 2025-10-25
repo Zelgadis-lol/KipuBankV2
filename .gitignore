@@ -1,3 +1,31 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Dotenv file
+.env
+
+# Dependencies
+lib/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
 # Remix compiler artifacts
 **/artifacts/
 **/artifacts/**
@@ -11,5 +39,4 @@ states/
 *.tsbuildinfo
 
 # Optional
-.env
 .env.local
