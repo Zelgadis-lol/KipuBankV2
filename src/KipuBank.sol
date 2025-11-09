@@ -17,12 +17,6 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 contract KipuBank is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    /// @notice Role identifier for administrators with full permissions
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    
-    /// @notice Role identifier for managers with operational permissions
-    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-
     /// @notice Stores user balance and pending withdrawal information
     /// @dev Used in nested mapping for multi-token accounting
     struct UserBalance {
@@ -37,6 +31,12 @@ contract KipuBank is AccessControl, ReentrancyGuard {
         uint8 decimals;
         bool isSupported;
     }
+
+    /// @notice Role identifier for administrators with full permissions
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
+    /// @notice Role identifier for managers with operational permissions
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
     /// @notice Decimal precision for USD accounting (matches USDC)
     uint8 private constant USDC_DECIMALS = 6;
@@ -57,10 +57,6 @@ contract KipuBank is AccessControl, ReentrancyGuard {
     /// @notice Mapping of token addresses to their configuration
     /// @dev Stores price feed oracle, decimals, and support status
     mapping(address => TokenInfo) private s_tokenInfo;
-    
-    /// @notice Array of all supported token addresses
-    /// @dev Used for enumeration, includes address(0) for ETH
-    address[] private s_supportedTokens;
     
     /// @notice Total value deposited in the bank (in USD with 6 decimals)
     /// @dev Updated on deposits and withdrawals
@@ -241,17 +237,6 @@ contract KipuBank is AccessControl, ReentrancyGuard {
 
         s_tokenInfo[token].isSupported = false;
 
-        for (uint256 i = 0; i < s_supportedTokens.length; ) {
-            if (s_supportedTokens[i] == token) {
-                s_supportedTokens[i] = s_supportedTokens[s_supportedTokens.length - 1];
-                s_supportedTokens.pop();
-                break;
-            }
-            unchecked {
-                ++i;
-            }
-        }
-
         emit TokenRemoved(token);
     }
 
@@ -269,12 +254,6 @@ contract KipuBank is AccessControl, ReentrancyGuard {
     /// @return Pending withdrawal amount in token decimals
     function pendingWithdrawalOf(address user, address token) external view onlySupportedToken(token) returns (uint256) {
         return s_userBalances[user][token].pendingWithdrawal;
-    }
-
-    /// @notice Returns array of all supported token addresses
-    /// @return Array of token addresses (includes address(0) for ETH)
-    function getSupportedTokens() external view returns (address[] memory) {
-        return s_supportedTokens;
     }
 
     /// @notice Checks if a token is supported by the bank
@@ -340,7 +319,6 @@ contract KipuBank is AccessControl, ReentrancyGuard {
             isSupported: true
         });
 
-        s_supportedTokens.push(token);
         emit TokenAdded(token, priceFeed);
     }
 
